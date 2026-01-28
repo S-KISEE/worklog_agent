@@ -1,0 +1,56 @@
+[
+    {
+        "_id" : "680a4e5deb6e875aacc4720d",
+        "loggedDate" : "2025-05-02T00:00:00.000+0000",
+        "worklogStatus" : "APPROVED",
+        "isOnLeave" : true,
+        "isSaveAsDraft" : false,
+        "reviewedAt" : "2025-05-15T15:07:22.133+0000",
+        "tasks" : [
+
+        ],
+        "userDetails" : {
+            "_id" : "64ca1c3fa18b1586820a69ab",
+            "profileId" : "680a4e5deb6e875aacc4720d",
+            "employeeId" : "2308286 T/NP",
+            "fullname" : "Kushal Bhattarai",
+            "email" : "kushal.bhattarai@fmachines.com",
+            "gender" : "Male",
+            "countryOfResidence" : "Nepal",
+            "timezone" : "NP Nepal Asia/Kathmandu UTC +05:45",
+            "joinedDate" : "2023-08-01T00:00:00.000+0000",
+            "employeementType" : "f_EMPLOYEE",
+            "employeeLevel" : "Junior level",
+            "shift" : "EVENING",
+            "designation" : {
+                "grade" : null,
+                "id" : "643005289bb2d9d9536329e7",
+                "name" : "Data Engineer Associate"
+            },
+            "department" : {
+                "id" : "63c78788c5d00e9b9333c946",
+                "mainDepartmentId" : "66697523ac5c120fab631182",
+                "mainDepartment" : "Data Engineering Services",
+                "name" : "Data Engineering"
+            },
+            "billable" : true,
+            "employeeActiveStatus" : "ACTIVE",
+            "accountStatus" : "N/A",
+            "assignedStatus" : "ASSIGNED",
+            "employeeInvolvementStatus" : "AVAILABLE",
+            "benchStatus" : "TRAINEE_BENCH",
+            "deploymentStatus" : "NOT_DEPLOYABLE",
+            "jobType" : "FULL TIME",
+            "availableSince" : "N/A",
+            "resignDate" : null
+        },
+        "squadDetails" : {
+            "_id" : "65af67c641e1ded7fc3425aa",
+            "name" : "WUP - Staff Augmentation",
+            "type" : "EXTERNAL",
+            "status" : "RUNNING",
+            "startDate" : "2024-04-08T06:15:00.000+0000",
+            "endDate" : "2025-12-31T12:00:00.000+0000"
+        }
+    }
+]

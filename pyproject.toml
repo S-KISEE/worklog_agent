@@ -1,0 +1,21 @@
+[project]
+name = "worklog-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dotenv>=0.9.9",
+    "google-adk>=1.23.0",
+    "litellm>=1.81.4",
+    "matplotlib>=3.10.8",
+    "pandas>=3.0.0",
+    "pymongo[srv]>=4.16.0",
+    "python-dateutil>=2.9.0.post0",
+    "python-dotenv>=1.2.1",
+]
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+]
