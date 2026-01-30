@@ -1,0 +1,787 @@
+{
+  "system_description": "Worklog Agent Database Schema. This system manages employee time tracking, squad assignments, leaves, and billing.",
+  "collections": [
+    {
+      "name": "profilesummaries",
+      "description": "Central HR record. Contains parsed resume data, skills, billing rates, and squad assignments.",
+      "indexes": [
+        {
+          "name": "_id_",
+          "keys": { "_id": 1 },
+          "unique": true,
+          "description": "Primary Key."
+        },
+        {
+          "name": "userId_1",
+          "keys": { "userId": 1 },
+          "unique": true,
+          "description": "Foreign Key to 'users' collection. 1-to-1 relationship. FAST lookup."
+        },
+        {
+          "name": "user.email_1",
+          "keys": { "user.email": 1 },
+          "unique": true,
+          "description": "Fast lookup by email address (stored inside the embedded 'user' object)."
+        }
+      ],
+      "fields": [
+        {
+          "name": "userId",
+          "type": "String",
+          "indexed": true,
+          "description": "Link to the 'users' collection."
+        },
+        {
+          "name": "employeeActiveStatus",
+          "type": "String",
+          "indexed": false,
+          "description": "Current status of employment. Examples: 'Active', 'Notice Period', 'Terminated'."
+        },
+        {
+          "name": "jobType",
+          "type": "String",
+          "indexed": false,
+          "description": "Employment category. Examples: 'Full Time', 'Contract', 'Freelance'."
+        },
+        {
+          "name": "user",
+          "type": "Object",
+          "indexed": false,
+          "description": "Denormalized copy of basic user details.",
+          "subFields": [
+            {
+              "name": "email",
+              "type": "String",
+              "indexed": true,
+              "description": "User email. FAST search."
+            },
+            {
+              "name": "fullname",
+              "type": "String",
+              "indexed": false,
+              "description": "Full name."
+            },
+            {
+              "name": "cognitoId",
+              "type": "String",
+              "indexed": false,
+              "description": "AWS Auth ID."
+            }
+          ]
+        },
+        {
+          "name": "currentSquad",
+          "type": "Array<Object>",
+          "indexed": false,
+          "description": "A list of active assignments. Contains denormalized snapshots of the Squad and Client data. Use this field to find what a user is working on RIGHT NOW.",
+          "subFields": [
+            {
+              "name": "squadId",
+              "type": "String",
+              "description": "The ID of the squad."
+            },
+            {
+              "name": "roleInSquad",
+              "type": "String",
+              "description": "The user's specific role (e.g., 'Frontend Developer', 'QA', 'Lead')."
+            },
+            {
+              "name": "billable",
+              "type": "Boolean",
+              "description": "True if this specific assignment is billable to the client."
+            },
+            {
+              "name": "allocatedHours",
+              "type": "Integer",
+              "description": "Number of hours per day/week allocated to this squad."
+            },
+            {
+              "name": "involvementStatus",
+              "type": "String",
+              "description": "Status of assignment (e.g., 'Active', 'Shadowing')."
+            },
+            {
+              "name": "involvementHistory",
+              "type": "Array<Object>",
+              "description": "Historical record of involvement status changes.",
+              "subFields": [
+                {
+                  "name": "jobType",
+                  "type": "String",
+                  "description": "The job type value."
+                },
+                {
+                  "name": "joinedDate",
+                  "type": "Date",
+                  "description": "When the status started."
+                },
+                {
+                  "name": "endDate",
+                  "type": "Date",
+                  "description": "When the status ended (if applicable)."
+                },
+                {
+                  "name": "involvementStatus",
+                  "type": "String",
+                  "description": "The involvement status value."
+                },
+                {
+                  "name": "role",
+                  "type": "String",
+                  "description": "The role value."
+                },
+                {
+                  "name": "allocatedHours",
+                  "type": "Integer",
+                  "description": "The allocated hours value."
+                }
+              ]
+            },
+            {
+              "name": "joinedDate",
+              "type": "Date",
+              "description": "When they started this assignment."
+            },
+            {
+              "name": "endDate",
+              "type": "Date",
+              "description": "When they ended this assignment."
+            },
+            {
+              "name": "squad",
+              "type": "Object",
+              "description": "Snapshot of the Squad details. Allows filtering by Squad Name/Tech without joining.",
+              "subFields": [
+                {
+                  "name": "name",
+                  "type": "String",
+                  "description": "Squad Name."
+                },
+                {
+                  "name": "activeStatus",
+                  "type": "String",
+                  "description": "e.g. 'Active'."
+                },
+                {
+                  "name": "techStack",
+                  "type": "Array<String>",
+                  "description": "Tech used in this squad (e.g. 'React')."
+                }
+              ]
+            },
+            {
+              "name": "client",
+              "type": "Object",
+              "description": "Snapshot of the Client details. Allows filtering by Client Name without joining.",
+              "subFields": [
+                {
+                  "name": "name",
+                  "type": "String",
+                  "description": "Client Name."
+                },
+                {
+                  "name": "clientType",
+                  "type": "String",
+                  "description": "Type of client."
+                },
+                {
+                  "name": "country",
+                  "type": "String",
+                  "description": "Client location."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "availability",
+          "type": "Object",
+          "indexed": false,
+          "description": "Current availability for new work.",
+          "subFields": [
+            {
+              "name": "isAvailable",
+              "type": "String",
+              "description": "e.g., 'Yes', 'No'."
+            },
+            {
+              "name": "hoursPerweek",
+              "type": "Integer",
+              "description": "Capacity available."
+            }
+          ]
+        },
+        {
+          "name": "billable",
+          "type": "Boolean",
+          "indexed": false,
+          "description": "Global flag if the employee is billable to clients."
+        },
+        {
+          "name": "countryOfResidence",
+          "type": "String",
+          "indexed": false,
+          "description": "User's physical location."
+        },
+        {
+          "name": "department",
+          "type": "Object",
+          "indexed": false,
+          "description": "Department the user belongs to.",
+          "subFields": [
+            {
+              "name": "mainDepartmentId",
+              "type": "String",
+              "description": "ID of the main department."
+            },
+            {
+              "name": "mainDepartment",
+              "type": "String",
+              "description": "Name of the main department."
+            },
+            {
+              "name": "name",
+              "type": "String",
+              "description": "Specific team name."
+            }
+          ]
+        },
+        {
+          "name": "benchStatus",
+          "type": "String",
+          "indexed": false,
+          "description": "Whether user is on bench. Examples: 'On Bench', 'Off Bench'."
+        },
+        {
+          "name": "assignedStatus",
+          "type": "String",
+          "indexed": false,
+          "description": "Whether user is assigned to a project. Examples: 'Assigned', 'Unassigned'."
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "description": "User management collection containing profiles, authentication keys, and permission settings.",
+      "indexes": [
+        { "name": "_id_", "keys": { "_id": 1 }, "unique": true },
+        {
+          "name": "cognitoIdList_1",
+          "keys": { "cognitoIdList": 1 },
+          "unique": false
+        }
+      ],
+      "fields": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "description": "Unique system identifier."
+        },
+        {
+          "name": "fullname",
+          "type": "String",
+          "description": "User's full name. WARNING: Not indexed."
+        },
+        {
+          "name": "email",
+          "type": "String",
+          "description": "User's email address. WARNING: Not indexed."
+        },
+        {
+          "name": "permissionGroupIds",
+          "type": "Array<String>",
+          "indexed": false,
+          "description": "List of permission group IDs assigned to the user."
+        },
+        {
+          "name": "isManager",
+          "type": "Boolean",
+          "description": "True if user manages others."
+        },
+        {
+          "name": "isDefaultApprover",
+          "type": "Boolean",
+          "indexed": false,
+          "description": "True if this user is a default approver for requests."
+        },
+        {
+          "name": "isAdditionalApprover",
+          "type": "Boolean",
+          "indexed": false,
+          "description": "True if this user is an additional/secondary approver."
+        },
+        {
+          "name": "lastLoggedInAt",
+          "type": "Date",
+          "indexed": false,
+          "description": "Timestamp of the last successful login."
+        },
+        {
+          "name": "totalLogIns",
+          "type": "Integer",
+          "indexed": false,
+          "description": "Count of total times the user has logged in."
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "indexed": false,
+          "description": "Date the user account was created."
+        },
+        {
+          "name": "updatedAt",
+          "type": "Date",
+          "indexed": false,
+          "description": "Date the user account was last modified."
+        },
+        {
+          "name": "deploymentStatus",
+          "type": "String",
+          "indexed": false,
+          "description": "Deployment status of the user (e.g., 'Deployed', 'Not Deployed')."
+        },
+        {
+          "name": "availabilityStatus",
+          "type": "String",
+          "indexed": false,
+          "description": "Availability status of the user (e.g., 'Available', 'Unavailable')."
+        }
+      ]
+    },
+    {
+      "name": "squads",
+      "description": "Manages 'Squads' (teams). A squad belongs to a specific Client/Organization.",
+      "indexes": [{ "name": "_id_", "keys": { "_id": 1 }, "unique": true }],
+      "fields": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "indexed": true,
+          "description": "Unique system identifier for the squad."
+        },
+        {
+          "name": "name",
+          "type": "String",
+          "indexed": false,
+          "description": "Name of the squad (e.g., 'Mobile Team Alpha'). WARNING: Not indexed."
+        },
+        {
+          "name": "activeStatus",
+          "type": "String",
+          "indexed": false,
+          "description": "Current status. Likely values: 'Active', 'Inactive', 'Archived'."
+        },
+        {
+          "name": "clientId",
+          "type": "String",
+          "indexed": false,
+          "description": "ID of the client this squad is working for. "
+        },
+        {
+          "name": "type",
+          "type": "String | Array",
+          "indexed": false,
+          "description": "The engagement model (e.g., 'Retainer', 'Fixed Cost')."
+        },
+        {
+          "name": "allowWorklog",
+          "type": "Boolean",
+          "indexed": false,
+          "description": "If true, members can log time against this squad."
+        },
+        {
+          "name": "squadBudget",
+          "type": "Number",
+          "indexed": false,
+          "description": "The financial budget allocated to this squad."
+        },
+        {
+          "name": "invoiceIntervalInDays",
+          "type": "Number",
+          "indexed": false,
+          "description": "How often this squad is invoiced (e.g., 30 for monthly)."
+        },
+        {
+          "name": "dealOwner",
+          "type": "Object",
+          "indexed": false,
+          "description": "Details about the internal sales/account manager responsible for this squad.",
+          "subFields": [
+            {
+              "name": "userId",
+              "type": "String",
+              "description": "ID of the deal owner."
+            },
+            {
+              "name": "ownerEmail",
+              "type": "String",
+              "description": "Email of the deal owner."
+            }
+          ]
+        },
+        {
+          "name": "startDate",
+          "type": "Date",
+          "indexed": false,
+          "description": "When the engagement started."
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "indexed": false,
+          "description": "Date the squad record was created."
+        },
+        {
+          "name": "endDate",
+          "type": "Date",
+          "indexed": false,
+          "description": "Date the squad record was ended (i.e., archived)."
+        },
+        {
+          "name": "defaultApprover",
+          "type": "string",
+          "indexed": false,
+          "description": "Default approver(s) for this squad. Link to 'users' collection."
+        }
+      ]
+    },
+    {
+      "name": "usersquadhistories",
+      "description": "Historical timeline of squad assignments. Tracks join/leave dates and billing rates.",
+      "indexes": [{ "name": "_id_", "keys": { "_id": 1 }, "unique": true }],
+      "fields": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "indexed": true,
+          "description": "Unique ID for this specific assignment record."
+        },
+        {
+          "name": "userId",
+          "type": "String",
+          "indexed": false,
+          "description": "The User being assigned. Link to 'users' collection. "
+        },
+        {
+          "name": "squadId",
+          "type": "String",
+          "indexed": false,
+          "description": "The Squad the user was assigned to. Link to 'squads' collection."
+        },
+        {
+          "name": "clientId",
+          "type": "String",
+          "indexed": false,
+          "description": "The Client paying for this squad."
+        },
+        {
+          "name": "joinedDate",
+          "type": "Date",
+          "indexed": false,
+          "description": "When the user started working on this squad."
+        },
+        {
+          "name": "endDate",
+          "type": "Date",
+          "indexed": false,
+          "description": "When the user left the squad. If null, they are likely still active."
+        },
+        {
+          "name": "involvementStatus",
+          "type": "String",
+          "indexed": false,
+          "description": "Current status of this assignment. Examples: 'Active', 'Past', 'Shadowing'."
+        },
+        {
+          "name": "roleInSquad",
+          "type": "String",
+          "indexed": false,
+          "description": "The specific role performed (e.g., 'Lead Developer', 'QA')."
+        },
+        {
+          "name": "involvementHistory",
+          "type": "Array<Object>",
+          "indexed": false,
+          "description": "Audit log tracking changes to this assignment (e.g., role changes or rate adjustments).",
+          "subFields": [
+            {
+              "name": "modifiedOn",
+              "type": "Date",
+              "description": "Date of change."
+            },
+            {
+              "name": "jobType",
+              "type": "String",
+              "description": "Job type at that time."
+            },
+            {
+              "name": "joinedDate",
+              "type": "Date",
+              "description": "Joined date at that time."
+            },
+            {
+              "name": "endDate",
+              "type": "Date",
+              "description": "End date at that time."
+            },
+            {
+              "name": "involvementStatus",
+              "type": "String",
+              "description": "Status at that time."
+            },
+            {
+              "name": "role",
+              "type": "String",
+              "description": "Role for that time."
+            },
+            {
+              "name": "allocatedHours",
+              "type": "Integer",
+              "description": "Allocated hours at that time."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "worklogs",
+      "description": "Master collection for Weekly Timesheets. One document = One week for One user.",
+      "indexes": [{ "name": "_id_", "keys": { "_id": 1 }, "unique": true }],
+      "fields": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "indexed": true,
+          "description": "Unique identifier for this specific weekly log."
+        },
+        {
+          "name": "userId",
+          "type": "ObjectId",
+          "indexed": false,
+          "description": "The Employee who did the work. Link to 'users' collection."
+        },
+        {
+          "name": "squadId",
+          "type": "ObjectId",
+          "indexed": false,
+          "description": "The Squad where the work was performed. Link to 'squads' collection."
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "indexed": false,
+          "description": "Approval status. Common values: 'Pending', 'Approved', 'Rejected', 'Draft'."
+        },
+        {
+          "name": "startDate",
+          "type": "Date",
+          "indexed": false,
+          "description": "The Monday (start) of the work week."
+        },
+        {
+          "name": "endDate",
+          "type": "Date",
+          "indexed": false,
+          "description": "The Sunday (end) of the work week."
+        },
+        {
+          "name": "reviewedBy",
+          "type": "ObjectId",
+          "indexed": false,
+          "description": "The Manager/Approver who approved this log."
+        },
+        {
+          "name": "comments",
+          "type": "Array<Object>",
+          "indexed": false,
+          "description": "Thread of comments between Employee and Manager regarding this log.",
+          "subFields": [
+            {
+              "name": "content",
+              "type": "String",
+              "description": "The comment text. Link to 'users' collection."
+            },
+            {
+              "name": "userId",
+              "type": "ObjectId",
+              "description": "Who wrote the comment. Link to 'users' collection."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "worklogTasks",
+      "description": "Granular daily task entries linked to a parent 'worklog'.",
+      "indexes": [{ "name": "_id_", "keys": { "_id": 1 }, "unique": true }],
+      "fields": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "indexed": true,
+          "description": "Unique identifier for this specific task entry."
+        },
+        {
+          "name": "worklogId",
+          "type": "ObjectId",
+          "indexed": false,
+          "description": "The parent Weekly Timesheet this task belongs to. CRITICAL: Currently not indexed (Slow loading of timesheets). Link to 'worklogs' collection."
+        },
+        {
+          "name": "userId",
+          "type": "ObjectId",
+          "indexed": false,
+          "description": "The User who performed the task. Link to 'users' collection."
+        },
+        {
+          "name": "squadId",
+          "type": "ObjectId",
+          "indexed": false,
+          "description": "The Squad associated with this task. Link to 'squads' collection."
+        },
+        {
+          "name": "category",
+          "type": "String",
+          "indexed": false,
+          "description": "The type of work (e.g., 'Development', 'Meeting')."
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "indexed": false,
+          "description": "Detailed notes on what was done."
+        },
+        {
+          "name": "minutes",
+          "type": "Integer",
+          "indexed": false,
+          "description": "Duration of the task in minutes."
+        },
+        {
+          "name": "startTime",
+          "type": "String",
+          "indexed": false,
+          "description": "Optional start time (e.g., '09:00 AM')."
+        },
+        {
+          "name": "endTime",
+          "type": "String",
+          "indexed": false,
+          "description": "Optional end time (e.g., '11:00 AM')."
+        },
+        {
+          "name": "isRecurring",
+          "type": "Boolean",
+          "indexed": false,
+          "description": "If this task automatically repeats."
+        }
+      ]
+    },
+    {
+      "name": "worklogleaves",
+      "description": "Records employee absences.",
+      "indexes": [{ "name": "_id_", "keys": { "_id": 1 }, "unique": true }],
+      "fields": [
+        {
+          "name": "_id",
+          "type": "ObjectId",
+          "indexed": true,
+          "description": "Unique identifier for the leave record."
+        },
+        {
+          "name": "userId",
+          "type": "ObjectId",
+          "indexed": false,
+          "description": "The Employee taking leave. Link to 'users' collection."
+        },
+        {
+          "name": "squadId",
+          "type": "ObjectId",
+          "indexed": false,
+          "description": "The Squad the user belongs to. Used to show 'Who is on leave' in squad dashboards. Link to 'squads' collection."
+        },
+        {
+          "name": "worklogId",
+          "type": "ObjectId",
+          "indexed": false,
+          "description": "Link to the specific worklog entry generated for this leave (if any). Link to 'worklogs' collection."
+        },
+        {
+          "name": "leaveDate",
+          "type": "Date",
+          "indexed": false,
+          "description": "The specific date of the leave."
+        },
+        {
+          "name": "leaveType",
+          "type": "String",
+          "indexed": false,
+          "description": "The classification of leave (e.g., 'Sick', 'Casual', 'Earned')."
+        },
+        {
+          "name": "leaveCategory",
+          "type": "String",
+          "indexed": false,
+          "description": "Broader category (e.g., 'Paid', 'Unpaid')."
+        },
+        {
+          "name": "leaveStatus",
+          "type": "String",
+          "indexed": false,
+          "description": "Current status (e.g., 'Approved', 'Pending', 'Rejected')."
+        },
+        {
+          "name": "leaveRemarks",
+          "type": "String",
+          "indexed": false,
+          "description": "Notes or reason provided by the employee."
+        },
+        {
+          "name": "createdAt",
+          "type": "Date",
+          "indexed": false,
+          "description": "When the leave request was submitted."
+        }
+      ]
+    },
+    {
+      "name": "worklogCategories",
+      "description": "Lookup table for task categories.",
+      "indexes": [{ "name": "_id_", "keys": { "_id": 1 }, "unique": true }],
+      "fields": [
+        {
+          "name": "label",
+          "type": "String",
+          "description": "Category name (e.g., 'Meeting')."
+        }
+      ]
+    },
+    {
+      "name": "worklogClose",
+      "description": "Defines locked periods where timesheets cannot be edited.",
+      "indexes": [{ "name": "_id_", "keys": { "_id": 1 }, "unique": true }],
+      "fields": [
+        {
+          "name": "squadId",
+          "type": "ObjectId",
+          "description": "Target Squad. Link to 'squads' collection."
+        },
+        {
+          "name": "closeStartDate",
+          "type": "Date",
+          "description": "Start of lock."
+        },
+        {
+          "name": "closeEndDate",
+          "type": "Date",
+          "description": "End of lock."
+        },
+        {
+          "name": "status",
+          "type": "String",
+          "description": "Lock status (e.g., 'OPEN', 'CLOSED')."
+        }
+      ]
+    }
+  ]
+}
